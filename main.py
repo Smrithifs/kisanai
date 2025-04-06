@@ -11,8 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from io import BytesIO
 from PIL import Image
-import torch
-from torchvision import transforms
 from gtts import gTTS
 import playsound
 import re
@@ -27,6 +25,7 @@ if not gemini_api_key:
 
 genai.configure(api_key=gemini_api_key)
 model = genai.GenerativeModel("gemini-1.5-pro")
+vision_model = genai.GenerativeModel("gemini-1.5-flash")  # 🆕 Vision Model for Images
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -39,14 +38,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Load Pre-trained Crop Detection Model
-try:
-    crop_model = torch.hub.load("pytorch/vision:v0.10.0", "resnet18", pretrained=True)
-    crop_model.eval()
-except Exception as e:
-    print(f"❌ Error loading crop detection model: {e}")
-    crop_model = None
 
 # Supported languages for TTS
 SUPPORTED_LANGUAGES = {
@@ -105,11 +96,9 @@ def translate_text(text, target_lang):
 def speak_response(response, language="kn"):
     if not response:
         return
-
     if "stop" in response.lower():
         print("🛑 Stopped Talking!")
         return
-
     print(f"🗣 Speaking in {language}: {response}")
     try:
         tts = gTTS(text=response, lang=language, slow=False)
@@ -127,34 +116,27 @@ async def real_time_assistant(language="kn"):
             ai_response = generate_gemini_response(translated_text)
             translated_response = translate_text(ai_response, language)
             speak_response(translated_response, language)
-
             if "stop" in translated_response.lower():
                 break
 
-# 🌿 Crop Detection
-def detect_crop(image):
-    if crop_model is None:
-        return "❌ Crop detection model not loaded."
-
+# 🌿 Crop Detection (Updated with Gemini 1.5 Flash)
+def detect_crop(image_bytes):
     try:
-        preprocess = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-
-        img = Image.open(BytesIO(image))
-        img = img.convert('RGB')
-        image_tensor = preprocess(img).unsqueeze(0)
-
-        with torch.no_grad():
-            output = crop_model(image_tensor)
-            _, predicted = torch.max(output.data, 1)
-
-        class_names = ["Crop A", "Crop B", "No Crop"]  # Replace with your actual classes
-        predicted_class = class_names[predicted[0]]
-
-        return f"🌿 Crop detected: {predicted_class}"
+        response = vision_model.generate_content(
+            contents=[
+                {
+                    "role": "user",
+                    "parts": [
+                        {"text": "Analyze this crop image and tell if there is any disease or problem. If healthy, just say healthy."},
+                        {"inline_data": {
+                            "mime_type": "image/jpeg",
+                            "data": image_bytes
+                        }}
+                    ]
+                }
+            ]
+        )
+        return clean_response(response.candidates[0].content.parts[0].text)
     except Exception as e:
         return f"❌ Crop detection error: {e}"
 
@@ -174,7 +156,6 @@ async def ask_question(question: str = Form(...), language: str = Form("kn")):
 async def start_voice_assistant(language: str):
     if language not in SUPPORTED_LANGUAGES:
         raise HTTPException(status_code=400, detail="❌ Language not supported")
-
     asyncio.create_task(real_time_assistant(language))
     return {"status": f"🎤 Voice assistant started in {language}"}
 
@@ -189,13 +170,11 @@ async def get_weather(city_name: str, language: str = "kn"):
     openweather_api_key = os.getenv("OPENWEATHER_API_KEY")
     if not openweather_api_key:
         raise HTTPException(status_code=500, detail="❌ OpenWeather API key missing!")
-
     try:
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={openweather_api_key}&units=metric"
         response = requests.get(url)
         response.raise_for_status()
         weather_data = response.json()
-
         description = translate_text(weather_data["weather"][0]["description"], language)
         weather_data["weather"][0]["description"] = description
         return weather_data
