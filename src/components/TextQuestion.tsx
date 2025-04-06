@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import LanguageSelector from './LanguageSelector';
 import { ApiService, getLanguageName } from '@/services/api';
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TextQuestionProps {
   defaultLanguage?: string;
@@ -17,6 +18,7 @@ const TextQuestion: React.FC<TextQuestionProps> = ({ defaultLanguage = 'kn' }) =
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Update language when defaultLanguage prop changes
   useEffect(() => {
@@ -55,15 +57,15 @@ const TextQuestion: React.FC<TextQuestionProps> = ({ defaultLanguage = 'kn' }) =
 
   return (
     <Card className="w-full shadow-md">
-      <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg">
-        <CardTitle className="text-2xl">Ask Questions</CardTitle>
+      <CardHeader className={`bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg ${isMobile ? 'py-3 px-4' : ''}`}>
+        <CardTitle className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>Ask Questions</CardTitle>
         <CardDescription className="text-white opacity-90">
           Type your questions and get answers in your language
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className={`${isMobile ? 'pt-4 px-4' : 'pt-6'}`}>
+        <form onSubmit={handleSubmit} className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Select Language
@@ -80,7 +82,7 @@ const TextQuestion: React.FC<TextQuestionProps> = ({ defaultLanguage = 'kn' }) =
             </label>
             <Textarea
               placeholder="Type your farming question here..."
-              className="min-h-[100px] resize-none"
+              className={`${isMobile ? 'min-h-[80px]' : 'min-h-[100px]'} resize-none`}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
             />
@@ -89,7 +91,7 @@ const TextQuestion: React.FC<TextQuestionProps> = ({ defaultLanguage = 'kn' }) =
           <div className="flex justify-center">
             <Button 
               type="submit" 
-              className="px-8 py-6 text-lg w-full md:w-auto"
+              className={`${isMobile ? 'px-4 py-2 text-base' : 'px-8 py-6 text-lg'} w-full md:w-auto`}
               disabled={isLoading || !question.trim()}
             >
               {isLoading ? (
@@ -106,10 +108,10 @@ const TextQuestion: React.FC<TextQuestionProps> = ({ defaultLanguage = 'kn' }) =
       </CardContent>
       
       {response && (
-        <CardFooter className="flex-col items-start pt-2 pb-6">
-          <div className="mt-4 w-full">
+        <CardFooter className={`flex-col items-start ${isMobile ? 'pt-2 pb-4 px-4' : 'pt-2 pb-6'}`}>
+          <div className="mt-3 w-full">
             <h3 className="font-medium text-lg mb-2">Answer:</h3>
-            <div className="p-4 bg-green-50 rounded-lg whitespace-pre-wrap border border-green-100">
+            <div className="p-3 bg-green-50 rounded-lg whitespace-pre-wrap border border-green-100 text-sm sm:text-base">
               {response}
             </div>
           </div>
