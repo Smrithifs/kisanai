@@ -1,4 +1,3 @@
-
 import asyncio
 import os
 import speech_recognition as sr
@@ -14,8 +13,8 @@ from io import BytesIO
 from PIL import Image
 import torch
 from torchvision import transforms
-from gtts import gTTS  # ✅ Import Google Text-to-Speech
-import playsound  # ✅ Import for playing speech
+from gtts import gTTS
+import playsound
 import re
 
 # Load environment variables
@@ -27,7 +26,7 @@ if not gemini_api_key:
     raise ValueError("❌ Gemini API key not found! Set the GEMINI_API_KEY in .env")
 
 genai.configure(api_key=gemini_api_key)
-model = genai.GenerativeModel("gemini-1.5-pro")  # ✅ Correct model name
+model = genai.GenerativeModel("gemini-1.5-pro")
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -35,13 +34,13 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins in development
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load Pre-trained Crop Detection Model (Using ResNet18)
+# Load Pre-trained Crop Detection Model
 try:
     crop_model = torch.hub.load("pytorch/vision:v0.10.0", "resnet18", pretrained=True)
     crop_model.eval()
@@ -49,7 +48,7 @@ except Exception as e:
     print(f"❌ Error loading crop detection model: {e}")
     crop_model = None
 
-# Supported languages with TTS accents
+# Supported languages for TTS
 SUPPORTED_LANGUAGES = {
     "en": "en",
     "hi": "hi",
@@ -59,16 +58,14 @@ SUPPORTED_LANGUAGES = {
     "mr": "mr"
 }
 
-# -------------------------
 # 🎤 Speech Recognition
-# -------------------------
-def recognize_speech(language="kn-IN"):  # ✅ Default Kannada (Change as needed)
+def recognize_speech(language="kn-IN"):
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print("🎤 Listening... (Longer pause enabled)")
+        print("🎤 Listening...")
         recognizer.adjust_for_ambient_noise(source)
         try:
-            audio = recognizer.listen(source, timeout=60, phrase_time_limit=45)  # ✅ Extended timeout
+            audio = recognizer.listen(source, timeout=60, phrase_time_limit=45)
             text = recognizer.recognize_google(audio, language=language)
             print(f"✅ Recognized ({language}): {text}")
             return text
@@ -79,17 +76,13 @@ def recognize_speech(language="kn-IN"):  # ✅ Default Kannada (Change as needed
             print(f"❌ Speech recognition service error: {e}")
             return None
 
-# -------------------------
-# 📝 Clean Response Text
-# -------------------------
+# 📝 Clean Response
 def clean_response(text):
-    text = re.sub(r'[*]', '', text)  # Remove asterisks
-    text = re.sub(r'\s*,\s*', ', ', text)  # Clean up extra spaces
+    text = re.sub(r'[*]', '', text)
+    text = re.sub(r'\s*,\s*', ', ', text)
     return text.strip()
 
-# -------------------------
-# 🤖 AI Response Generator
-# -------------------------
+# 🤖 AI Response
 def generate_gemini_response(prompt):
     try:
         response = model.generate_content(prompt)
@@ -97,9 +90,7 @@ def generate_gemini_response(prompt):
     except Exception as e:
         return f"❌ AI Error: {e}"
 
-# -------------------------
-# 🌍 Language Translation
-# -------------------------
+# 🌍 Translation
 def translate_text(text, target_lang):
     if not text:
         return ""
@@ -110,19 +101,16 @@ def translate_text(text, target_lang):
         print(f"❌ Translation Error: {e}")
         return text
 
-# -------------------------
-# 🗣 Google Text-to-Speech (gTTS)
-# -------------------------
+# 🗣 TTS (gTTS)
 def speak_response(response, language="kn"):
     if not response:
         return
 
-    if "stop" in response.lower():  # ✅ Stop if user says "stop"
+    if "stop" in response.lower():
         print("🛑 Stopped Talking!")
         return
 
     print(f"🗣 Speaking in {language}: {response}")
-
     try:
         tts = gTTS(text=response, lang=language, slow=False)
         tts.save("response.mp3")
@@ -130,25 +118,20 @@ def speak_response(response, language="kn"):
     except Exception as e:
         print(f"❌ TTS Error: {e}")
 
-# -------------------------
-# 🎤 Real-Time Voice Assistant
-# -------------------------
+# 🎤 Voice Assistant
 async def real_time_assistant(language="kn"):
     while True:
         user_input = recognize_speech(language)
         if user_input:
-            translated_text = translate_text(user_input, "en")  # Translate to English
+            translated_text = translate_text(user_input, "en")
             ai_response = generate_gemini_response(translated_text)
-            translated_response = translate_text(ai_response, language)  # ✅ Respond in the same language
-
+            translated_response = translate_text(ai_response, language)
             speak_response(translated_response, language)
 
-            if "stop" in translated_response.lower():  # ✅ Stop if user says "stop"
+            if "stop" in translated_response.lower():
                 break
 
-# -------------------------
 # 🌿 Crop Detection
-# -------------------------
 def detect_crop(image):
     if crop_model is None:
         return "❌ Crop detection model not loaded."
@@ -168,18 +151,14 @@ def detect_crop(image):
             output = crop_model(image_tensor)
             _, predicted = torch.max(output.data, 1)
 
-        class_names = ["Crop A", "Crop B", "No Crop"]
+        class_names = ["Crop A", "Crop B", "No Crop"]  # Replace with your actual classes
         predicted_class = class_names[predicted[0]]
 
         return f"🌿 Crop detected: {predicted_class}"
-
     except Exception as e:
         return f"❌ Crop detection error: {e}"
 
-# -------------------------
 # 🌱 API Endpoints
-# -------------------------
-
 @app.get("/")
 async def home():
     return {"message": "🌱 Welcome to the Farmer AI App!"}
@@ -221,10 +200,4 @@ async def get_weather(city_name: str, language: str = "kn"):
         weather_data["weather"][0]["description"] = description
         return weather_data
     except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"❌ Weather API Error: {e}")
-
-# -------------------------
-# 🚀 Run the App
-# -------------------------
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+        raise HTTPException(status_code=500, detail=f"❌ Weather API Error: {str(e)}")
