@@ -13,16 +13,22 @@ interface LanguageSelectorProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  disabled?: boolean;
 }
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ 
   value, 
   onChange,
-  className = ""
+  className = "",
+  disabled = false
 }) => {
   return (
     <div className={`w-full ${className}`}>
-      <Select value={value} onValueChange={onChange}>
+      <Select 
+        value={value} 
+        onValueChange={onChange}
+        disabled={disabled}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select Language" />
         </SelectTrigger>

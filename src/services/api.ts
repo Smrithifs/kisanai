@@ -20,11 +20,25 @@ export const getLanguageName = (code: string): string => {
   return language ? language.name : 'Unknown';
 };
 
+// Get language code for speech recognition
+export const getSpeechLanguageCode = (code: string): string => {
+  const languageMap: Record<string, string> = {
+    'en': 'en-US',
+    'hi': 'hi-IN',
+    'ta': 'ta-IN',
+    'kn': 'kn-IN',
+    'te': 'te-IN',
+    'mr': 'mr-IN'
+  };
+  return languageMap[code] || 'en-US';
+};
+
 // API endpoints
 export const ApiService = {
   // Start voice assistant
   startVoiceAssistant: async (language: string) => {
     try {
+      console.log(`Starting voice assistant in ${language}...`);
       const response = await fetch(`${API_BASE_URL}/start_voice_assistant/${language}`);
       
       if (!response.ok) {
@@ -42,6 +56,7 @@ export const ApiService = {
   // Text-based question answering
   askQuestion: async (question: string, language: string) => {
     try {
+      console.log(`Asking question in ${language}: ${question}`);
       const formData = new FormData();
       formData.append('question', question);
       formData.append('language', language);
@@ -66,6 +81,7 @@ export const ApiService = {
   // Crop detection
   detectCrop: async (imageFile: File) => {
     try {
+      console.log('Detecting crop from image...');
       const formData = new FormData();
       formData.append('file', imageFile);
       
@@ -89,6 +105,7 @@ export const ApiService = {
   // Weather information
   getWeather: async (cityName: string, language: string) => {
     try {
+      console.log(`Getting weather for ${cityName} in ${language}...`);
       const response = await fetch(`${API_BASE_URL}/weather/${encodeURIComponent(cityName)}?language=${language}`);
       
       if (!response.ok) {
