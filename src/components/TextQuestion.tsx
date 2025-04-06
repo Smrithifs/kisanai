@@ -1,18 +1,27 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import LanguageSelector from './LanguageSelector';
-import { ApiService } from '@/services/api';
+import { ApiService, getLanguageName } from '@/services/api';
 import { useToast } from "@/hooks/use-toast";
 
-const TextQuestion: React.FC = () => {
+interface TextQuestionProps {
+  defaultLanguage?: string;
+}
+
+const TextQuestion: React.FC<TextQuestionProps> = ({ defaultLanguage = 'kn' }) => {
   const [question, setQuestion] = useState('');
-  const [language, setLanguage] = useState('kn');
+  const [language, setLanguage] = useState(defaultLanguage);
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Update language when defaultLanguage prop changes
+  useEffect(() => {
+    setLanguage(defaultLanguage);
+  }, [defaultLanguage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,9 +55,9 @@ const TextQuestion: React.FC = () => {
 
   return (
     <Card className="w-full shadow-md">
-      <CardHeader className="bg-kisan-primary text-white rounded-t-lg">
+      <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg">
         <CardTitle className="text-2xl">Ask Questions</CardTitle>
-        <CardDescription className="text-kisan-light opacity-90">
+        <CardDescription className="text-white opacity-90">
           Type your questions and get answers in your language
         </CardDescription>
       </CardHeader>
@@ -100,7 +109,7 @@ const TextQuestion: React.FC = () => {
         <CardFooter className="flex-col items-start pt-2 pb-6">
           <div className="mt-4 w-full">
             <h3 className="font-medium text-lg mb-2">Answer:</h3>
-            <div className="p-4 bg-kisan-gray rounded-lg whitespace-pre-wrap">
+            <div className="p-4 bg-green-50 rounded-lg whitespace-pre-wrap border border-green-100">
               {response}
             </div>
           </div>

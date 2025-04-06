@@ -1,17 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import LanguageSelector from './LanguageSelector';
-import { ApiService, getLanguageName } from '@/services/api';
+import { ApiService, getLanguageName, getSpeechLanguageCode } from '@/services/api';
 import { useToast } from "@/hooks/use-toast";
 
-const VoiceAssistant: React.FC = () => {
+interface VoiceAssistantProps {
+  defaultLanguage?: string;
+}
+
+const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ defaultLanguage = 'kn' }) => {
   const [isListening, setIsListening] = useState(false);
-  const [language, setLanguage] = useState('kn');
+  const [language, setLanguage] = useState(defaultLanguage);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Update language when defaultLanguage prop changes
+  useEffect(() => {
+    setLanguage(defaultLanguage);
+  }, [defaultLanguage]);
 
   const toggleListening = async () => {
     if (isListening) {
@@ -44,9 +53,9 @@ const VoiceAssistant: React.FC = () => {
 
   return (
     <Card className="w-full shadow-md">
-      <CardHeader className="bg-kisan-primary text-white rounded-t-lg">
+      <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg">
         <CardTitle className="text-2xl">Voice Assistant</CardTitle>
-        <CardDescription className="text-kisan-light opacity-90">
+        <CardDescription className="text-white opacity-90">
           Ask questions in your language and get spoken responses
         </CardDescription>
       </CardHeader>
@@ -66,8 +75,8 @@ const VoiceAssistant: React.FC = () => {
           <div className="flex flex-col items-center justify-center py-6">
             {isListening ? (
               <div className="relative">
-                <div className="absolute -inset-4 rounded-full bg-kisan-primary opacity-20 animate-pulse"></div>
-                <Mic size={64} className="text-kisan-primary animate-pulse-slow" />
+                <div className="absolute -inset-4 rounded-full bg-green-500 opacity-20 animate-pulse"></div>
+                <Mic size={64} className="text-green-600 animate-pulse-slow" />
               </div>
             ) : (
               <MicOff size={64} className="text-gray-400" />
@@ -87,7 +96,7 @@ const VoiceAssistant: React.FC = () => {
       
       <CardFooter className="flex justify-center pt-2 pb-6">
         <Button 
-          className={`px-8 py-6 text-lg rounded-full ${isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-kisan-primary hover:bg-kisan-dark'}`}
+          className={`px-8 py-6 text-lg rounded-full ${isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-green-600 hover:bg-green-700'}`}
           onClick={toggleListening}
           disabled={isLoading}
         >

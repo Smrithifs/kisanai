@@ -1,35 +1,28 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import LanguageSelector from './LanguageSelector';
-import { ApiService } from '@/services/api';
+import { ApiService, getLanguageName } from '@/services/api';
 import { useToast } from "@/hooks/use-toast";
+import { CloudRain, Wind, Thermometer, Droplets } from "lucide-react";
 
-interface WeatherData {
-  weather: {
-    description: string;
-    icon: string;
-  }[];
-  main: {
-    temp: number;
-    feels_like: number;
-    humidity: number;
-    pressure: number;
-  };
-  wind: {
-    speed: number;
-  };
-  name: string;
+interface WeatherInfoProps {
+  defaultLanguage?: string;
 }
 
-const WeatherInfo: React.FC = () => {
+const WeatherInfo: React.FC<WeatherInfoProps> = ({ defaultLanguage = 'kn' }) => {
   const [city, setCity] = useState('');
-  const [language, setLanguage] = useState('kn');
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [language, setLanguage] = useState(defaultLanguage);
+  const [weatherData, setWeatherData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Update language when defaultLanguage prop changes
+  useEffect(() => {
+    setLanguage(defaultLanguage);
+  }, [defaultLanguage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +45,7 @@ const WeatherInfo: React.FC = () => {
       console.error("Error getting weather:", error);
       toast({
         title: "Error",
-        description: "Failed to get weather data. Please check the city name and try again.",
+        description: "Failed to get weather data. Please try again.",
         variant: "destructive",
         duration: 3000,
       });
@@ -63,10 +56,10 @@ const WeatherInfo: React.FC = () => {
 
   return (
     <Card className="w-full shadow-md">
-      <CardHeader className="bg-kisan-primary text-white rounded-t-lg">
+      <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg">
         <CardTitle className="text-2xl">Weather Information</CardTitle>
-        <CardDescription className="text-kisan-light opacity-90">
-          Get weather updates for your location
+        <CardDescription className="text-white opacity-90">
+          Get current weather for any location in your language
         </CardDescription>
       </CardHeader>
       
@@ -115,36 +108,53 @@ const WeatherInfo: React.FC = () => {
       {weatherData && (
         <CardFooter className="flex-col items-start pt-2 pb-6">
           <div className="mt-4 w-full">
-            <h3 className="font-medium text-lg mb-2">Weather in {weatherData.name}:</h3>
-            <div className="p-4 bg-kisan-gray rounded-lg">
-              <div className="flex flex-col sm:flex-row items-center justify-between">
-                <div className="flex items-center">
-                  {weatherData.weather[0].icon && (
-                    <img
-                      src={`http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`}
+            <div className="bg-green-50 rounded-lg p-6 border border-green-100">
+              <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
+                <div className="flex items-center mb-4 sm:mb-0">
+                  <div className="mr-4">
+                    <img 
+                      src={`http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`} 
                       alt={weatherData.weather[0].description}
                       className="w-16 h-16"
                     />
-                  )}
+                  </div>
                   <div>
-                    <p className="text-xl font-medium">{Math.round(weatherData.main.temp)}°C</p>
+                    <h3 className="text-2xl font-bold">{weatherData.name}</h3>
                     <p className="text-gray-600 capitalize">{weatherData.weather[0].description}</p>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 sm:mt-0">
+                <div className="text-3xl font-bold">
+                  {Math.round(weatherData.main.temp)}°C
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
+                  <Thermometer className="w-6 h-6 text-orange-500 mr-3" />
                   <div>
                     <p className="text-sm text-gray-500">Feels Like</p>
                     <p className="font-medium">{Math.round(weatherData.main.feels_like)}°C</p>
                   </div>
+                </div>
+                
+                <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
+                  <Droplets className="w-6 h-6 text-blue-500 mr-3" />
                   <div>
                     <p className="text-sm text-gray-500">Humidity</p>
                     <p className="font-medium">{weatherData.main.humidity}%</p>
                   </div>
+                </div>
+                
+                <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
+                  <Wind className="w-6 h-6 text-green-500 mr-3" />
                   <div>
-                    <p className="text-sm text-gray-500">Wind</p>
+                    <p className="text-sm text-gray-500">Wind Speed</p>
                     <p className="font-medium">{weatherData.wind.speed} m/s</p>
                   </div>
+                </div>
+                
+                <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
+                  <CloudRain className="w-6 h-6 text-gray-500 mr-3" />
                   <div>
                     <p className="text-sm text-gray-500">Pressure</p>
                     <p className="font-medium">{weatherData.main.pressure} hPa</p>
