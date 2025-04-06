@@ -8,6 +8,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { SUPPORTED_LANGUAGES } from "@/services/api";
+import { Languages } from 'lucide-react';
 
 interface LanguageSelectorProps {
   value: string;
@@ -29,12 +30,17 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         onValueChange={onChange}
         disabled={disabled}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full flex items-center border-green-200 focus:ring-green-500">
+          <Languages className="w-4 h-4 mr-2 text-green-600" />
           <SelectValue placeholder="Select Language" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white border-green-100">
           {SUPPORTED_LANGUAGES.map((language) => (
-            <SelectItem key={language.code} value={language.code}>
+            <SelectItem 
+              key={language.code} 
+              value={language.code}
+              className="hover:bg-green-50 focus:bg-green-50"
+            >
               {language.name}
             </SelectItem>
           ))}

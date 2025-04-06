@@ -100,15 +100,31 @@ export default {
 				'pulse-slow': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.5' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'fade-in': {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-slow': 'pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+				'pulse-slow': 'pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'float': 'float 6s ease-in-out infinite',
+				'fade-in': 'fade-in 0.8s ease-out'
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif']
+			},
+			backgroundImage: {
+				'kisan-gradient': 'linear-gradient(120deg, #76b852, #8DC26F)',
+				'kisan-gradient-light': 'linear-gradient(120deg, rgba(118, 184, 82, 0.8), rgba(141, 194, 111, 0.8))',
+				'leaf-pattern': 'url("/lovable-uploads/3f7c5a9f-1766-4fe4-b2df-627cb5d6e647.png")',
+				'abstract-green': 'url("/lovable-uploads/b4700a59-b638-4d96-82a3-5f0f485ad1ba.png")'
 			}
 		}
 	},
